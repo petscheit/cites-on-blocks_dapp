@@ -149,7 +149,8 @@ let local = new LocalizedStrings({
       species: 'Species',
       importFromXML: 'Import from XML',
       decline: 'Decline',
-      confirm: 'Confirm'
+      confirm: 'Confirm',
+      addImage: 'Add Image of Permit'
     },
     permitCreate: {
       pending: 'Permit creation pending...',

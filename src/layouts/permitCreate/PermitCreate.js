@@ -19,6 +19,7 @@ import SpeciesInputs from '../../components/SpeciesInputs'
 import PendingTxModal from '../../components/PendingTxModal'
 import { isASCII } from '../../util/stringUtils'
 import * as permitUtils from '../../util/permitUtils'
+import * as ipfs from '../../util/ipfs'
 import local from '../../localization/localizedStrings'
 import { COUNTRY_OPTS } from '../../util/options'
 
@@ -375,80 +376,23 @@ class PermitCreate extends Component {
     this.setState({ isCITESXML: true, isSameCountry: true })
   }
 
-  handleUpload() {
-    if (!this.state.isXML) {
-      return
-    }
-    this.clearErrors()
-    if (!this.isCITESXML()) {
-      let { isCITESXML } = this.state
-      isCITESXML = false
-      this.setState({ isCITESXML })
-      return
-    }
-    this.setState({ isCITESXML: true })
-    const { permit } = this.state
-    const { xmlToJSON } = this.state
-    const XMLNamespace = this.getXMLNamespace()
-    const generalInfo =
-      xmlToJSON[XMLNamespace + 'CITESEPermit'][
-        XMLNamespace + 'SpecifiedSupplyChainConsignment'
-      ][0]
-    //set address data
-    const exportInfo = generalInfo.ConsignorTradeParty[0]
-    const exportAddress = exportInfo.PostalTradeAddress[0]
+  handleImageUploadChange(event) {
+    var file = event.target.files[0]
+    var reader = new FileReader()
+    // reader.onload = function(event) {
+    //   // The file's text will be printed here
+    //   console.log(event.target.result)
+    // }
 
-    const importInfo = generalInfo.ConsigneeTradeParty[0]
-    const importAddress = importInfo.PostalTradeAddress[0]
+    // let filePath = reader.readAsDataURL(file)
+    console.log(file)
+    // this.setState({imgFile: file})
+    this.handleImageUpload(file)
+  }
 
-    const { permitForm } = this.state
-
-    if (
-      (permitForm === 'DIGITAL' &&
-        exportAddress.CountryID[0] !== permit.exportCountry) ||
-      (permitForm === 'PAPER' &&
-        importAddress.CountryID[0] !== permit.importCountry)
-    ) {
-      let { isSameCountry } = this.state
-      isSameCountry = false
-      this.setState({ isSameCountry })
-      return
-    }
-    this.setState({ isSameCountry: true })
-    permit.exportCountry = exportAddress.CountryID[0]
-    permit.exporter = [
-      exportInfo.Name[0],
-      exportAddress.StreetName[0],
-      exportAddress.CityName[0]
-    ]
-
-    permit.importCountry = importAddress.CountryID[0]
-    permit.importer = [
-      importInfo.Name[0],
-      importAddress.StreetName[0],
-      importAddress.CityName[0]
-    ]
-    //set species data
-    const speciesXML = generalInfo.IncludedSupplyChainConsignmentItem
-    const speciesArray = speciesXML.map(xml => {
-      const specimen = permitUtils.DEFAULT_SPECIMEN
-      const xmlData =
-        xml.IncludedSupplyChainTradeLineItem[0].SpecifiedTradeProduct[0]
-      specimen.scientificName = xmlData.ScientificName[0]
-      specimen.commonName = xmlData.CommonName[0]
-      specimen.description = xmlData.Description[0]
-      specimen.quantity = xml.TransportLogisticsPackage[0].ItemQuantity[0]._
-      return specimen
-    })
-    const permitType =
-      xmlToJSON[XMLNamespace + 'CITESEPermit'][
-        XMLNamespace + 'HeaderExchangedDocument'
-      ][0].TypeCode[0]
-    permit.permitType = this.getTypeString(permitType)
-    this.setState({
-      permit,
-      specimens: speciesArray
-    })
+  handleImageUpload(file) {
+    console.log(this.state.file)
+    ipfs.add(file)
   }
 
   handleUploadChange(event) {
@@ -639,6 +583,24 @@ class PermitCreate extends Component {
             permitType={permit.permitType}
           />
         ))}
+        {/* newww */}
+        <Box
+          justify={'center'}
+          size={'full'}
+          direction={'row'}
+          margin={'medium'}>
+          <input
+            type="file"
+            accept="img/pdf"
+            onChange={event => this.handleImageUploadChange(event)}
+          />
+          <Button
+            label={local.permits.addImage}
+            icon={<DocumentUploadIcon />}
+            onClick={() => this.handleImageUpload()}
+          />
+        </Box>
+        {/* neww end */}
         <Box
           justify={'center'}
           size={'full'}
