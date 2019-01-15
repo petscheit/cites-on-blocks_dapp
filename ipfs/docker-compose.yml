@@ -5,7 +5,7 @@ services:
      image: ipfs/go-ipfs
      container_name: "ipfsA"
      environment:
-      - IPFS_BIND_IP=0.0.0.0
+      - IPFS_BIND_IP=127.0.0.1
       - IPFS_BOOTSTRAP_RM_ALL=true
       - GATEWAY_PORT=8080
       - API_PORT=5001

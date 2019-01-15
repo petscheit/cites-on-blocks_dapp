@@ -28,7 +28,16 @@ sleep 20
 
 # upload webui files to private ipfs network
 docker exec ipfsA ipfs add -r data/ipfs/QmSDgpiHco5yXdyVTfhKxr3aiJ82ynz8V14QcGKicM3rVh
+docker exec ipfsA ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["http://localhost:3000", "*" ,"https://webui.ipfs.io"]'
+docker exec ipfsA ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "GET", "POST"]'
+docker exec ipfsA ipfs config --json API.HTTPHeaders.Access-Control-Allow-Credentials '["true"]'
+docker exec ipfsA ipfs config --json Gateway.Writable 'true'
+docker restart ipfsA
+sleep 10
 echo ""
 echo "Containers running and webui added to private network..."
 echo "Opening webui..."
 open http://127.0.0.1:5001/webui
+
+
+# ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["http://localhost:3000", "https://webui.ipfs.io"]'
