@@ -6,7 +6,7 @@ module.exports = async (deployer, network, accounts) => {
   // set whitelist for dev purposes
   if (network === 'development') {
     const permitFactory = await PermitFactory.deployed()
-    await permitFactory.addAddress(accounts[1], 'DE')
-    await permitFactory.addAddress(accounts[2], 'FR')
+    await permitFactory.addAddress(accounts[1], '0xDE')
+    // await permitFactory.addAddress(accounts[2], 'FR')
   }
 }

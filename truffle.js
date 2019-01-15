@@ -15,10 +15,13 @@ module.exports = {
       gas: '0x2FEFD8'
     }
   },
-  solc: {
-    optimizer: {
-      enabled: true,
-      runs: 500
+   compilers: {
+    solc: {
+      version: "0.4.23",
+      optimizer: {
+        enabled: true,
+        runs: 500
+      }
     }
   },
   mocha: {

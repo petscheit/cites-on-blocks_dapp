@@ -15,10 +15,13 @@ module.exports = {
       from: '0x6b0c56d1ad5144b4d37fa6e27dc9afd5c2435c3b'
     }
   },
-  solc: {
-    optimizer: {
-      enabled: true,
-      runs: 500
+  compiler: {
+    solc: {
+      version: "0.4.23",
+      optimizer: {
+        enabled: true,
+        runs: 500
+      }
     }
   }
 }
