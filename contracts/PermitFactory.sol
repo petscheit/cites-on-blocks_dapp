@@ -34,6 +34,7 @@ contract PermitFactory is Whitelist {
     bytes32[3] importer; // name and address of importer: ["name", "street", "city"]
     bytes32[] specimenHashes; // hashes of specimens
     uint nonce; // used to create unique hash
+    bytes32 ipfsImageHash; // hash used to find image of permit on IPFS. Client must prepend "Qm" to find file
   }
 
   /**
@@ -122,7 +123,8 @@ contract PermitFactory is Whitelist {
     bytes32[] _commonNames,
     bytes32[] _descriptions,
     bytes32[] _originHashes,
-    bytes32[] _reExportHashes
+    bytes32[] _reExportHashes,
+    bytes32 _ipfsImageHash
   )
     public
     onlyWhitelisted
@@ -139,7 +141,8 @@ contract PermitFactory is Whitelist {
       _commonNames,
       _descriptions,
       _originHashes,
-      _reExportHashes
+      _reExportHashes,
+      _ipfsImageHash
     );
   }
 
@@ -160,37 +163,37 @@ contract PermitFactory is Whitelist {
    * @param _originHashes hashes of origin permits of specimens
    * @param _reExportHashes hashes of last re-export permits of specimens
    */
-  function createPaperPermit(
-    bytes2 _exportCountry,
-    bytes2 _importCountry,
-    uint8 _permitType,
-    bytes32[3] _exporter,
-    bytes32[3] _importer,
-    uint[] _quantities,
-    bytes32[] _scientificNames,
-    bytes32[] _commonNames,
-    bytes32[] _descriptions,
-    bytes32[] _originHashes,
-    bytes32[] _reExportHashes
-  )
-    public
-    onlyWhitelisted
-    whitelistedForCountry(_importCountry, msg.sender)
-  {
-    _createPermit(
-      _exportCountry,
-      _importCountry,
-      _permitType,
-      _exporter,
-      _importer,
-      _quantities,
-      _scientificNames,
-      _commonNames,
-      _descriptions,
-      _originHashes,
-      _reExportHashes
-    );
-  }
+  // function createPaperPermit(
+  //   bytes2 _exportCountry,
+  //   bytes2 _importCountry,
+  //   uint8 _permitType,
+  //   bytes32[3] _exporter,
+  //   bytes32[3] _importer,
+  //   uint[] _quantities,
+  //   bytes32[] _scientificNames,
+  //   bytes32[] _commonNames,
+  //   bytes32[] _descriptions,
+  //   bytes32[] _originHashes,
+  //   bytes32[] _reExportHashes
+  // )
+  //   public
+  //   onlyWhitelisted
+  //   whitelistedForCountry(_importCountry, msg.sender)
+  // {
+  //   _createPermit(
+  //     _exportCountry,
+  //     _importCountry,
+  //     _permitType,
+  //     _exporter,
+  //     _importer,
+  //     _quantities,
+  //     _scientificNames,
+  //     _commonNames,
+  //     _descriptions,
+  //     _originHashes,
+  //     _reExportHashes
+  //   );
+  // }
 
   /**
    * Mark a permit as confirmed and set the accepted flag.
@@ -397,7 +400,8 @@ contract PermitFactory is Whitelist {
     bytes32[] _commonNames,
     bytes32[] _descriptions,
     bytes32[] _originHashes,
-    bytes32[] _reExportHashes
+    bytes32[] _reExportHashes,
+    bytes32 _ipfsImageHash
   )
     private
   {
@@ -409,7 +413,8 @@ contract PermitFactory is Whitelist {
       exporter: _exporter,
       importer: _importer,
       specimenHashes: new bytes32[](_quantities.length),
-      nonce: permitNonce
+      nonce: permitNonce,
+      ipfsImageHash: _ipfsImageHash
     });
 
     // Generate the unique hash to store the permit.
