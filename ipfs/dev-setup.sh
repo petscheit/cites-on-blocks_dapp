@@ -12,6 +12,7 @@ mkdir ipfsA ipfsB
 
 # download webui files
 cd ipfsA
+echo "Downloading webui files..."
 curl https://ipfs.io/api/v0/get/QmSDgpiHco5yXdyVTfhKxr3aiJ82ynz8V14QcGKicM3rVh | tar -xf -
 cd ..
 
