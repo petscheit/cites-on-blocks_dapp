@@ -52,6 +52,7 @@ export function convertSpecimensToArrays(specimens) {
 }
 
 export function parseRawPermit(rawPermit) {
+  // possibly breaking changes because nonce is replaced for ipfsImageHash
   return {
     exportCountry: utils.hexToUtf8(rawPermit[0]),
     importCountry: utils.hexToUtf8(rawPermit[1]),
@@ -67,7 +68,7 @@ export function parseRawPermit(rawPermit) {
       city: utils.hexToUtf8(rawPermit[4][2])
     },
     specimenHashes: rawPermit[5],
-    nonce: rawPermit[6]
+    ipfsImageHash: utils.hexToUtf8(rawPermit[6])
   }
 }
 

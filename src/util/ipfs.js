@@ -4,12 +4,11 @@ const fileReaderPullStream = require('pull-file-reader')
 
 export function add(file) {
     const fileStream = fileReaderPullStream(file)
-    ipfs
+    return ipfs
         .add(fileStream)
         .then(response => {
             console.log(response)
-            let ipfsId = response[0].hash
-            console.log(ipfsId)
+            return response[0].hash
         }).catch((err) => {
             console.log(err)
         })

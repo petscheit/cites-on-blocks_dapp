@@ -109,49 +109,73 @@ class PermitCreate extends Component {
   createPermit() {
     const isValid = this.isFormValid()
     this.setState({ isValid })
+    
     if (isValid) {
       const { permit, specimens } = this.state
       const specimensAsArrays = permitUtils.convertSpecimensToArrays(specimens)
       // stack id used for monitoring transaction
       this.stackId =
         this.state.permitForm === 'DIGITAL'
-          ? this.contracts.PermitFactory.methods.createPermit.cacheSend(
-              utils.asciiToHex(permit.exportCountry),
-              utils.asciiToHex(permit.importCountry),
-              permitUtils.PERMIT_TYPES.indexOf(permit.permitType),
-              permit.exporter.map(address => utils.asciiToHex(address)),
-              permit.importer.map(address => utils.asciiToHex(address)),
-              specimensAsArrays.quantities,
-              specimensAsArrays.scientificNames.map(e => utils.asciiToHex(e)),
-              specimensAsArrays.commonNames.map(e => utils.asciiToHex(e)),
-              specimensAsArrays.descriptions.map(e => utils.asciiToHex(e)),
-              specimensAsArrays.originHashes.map(
-                hash => (hash ? hash : utils.asciiToHex(hash))
-              ),
-              specimensAsArrays.reExportHashes.map(
-                hash => (hash ? hash : utils.asciiToHex(hash))
-              ),
-              { from: this.props.accounts[0] }
-            )
-          : this.contracts.PermitFactory.methods.createPaperPermit.cacheSend(
-              utils.asciiToHex(permit.exportCountry),
-              utils.asciiToHex(permit.importCountry),
-              permitUtils.PERMIT_TYPES.indexOf(permit.permitType),
-              permit.exporter.map(address => utils.asciiToHex(address)),
-              permit.importer.map(address => utils.asciiToHex(address)),
-              specimensAsArrays.quantities,
-              specimensAsArrays.scientificNames.map(e => utils.asciiToHex(e)),
-              specimensAsArrays.commonNames.map(e => utils.asciiToHex(e)),
-              specimensAsArrays.descriptions.map(e => utils.asciiToHex(e)),
-              specimensAsArrays.originHashes.map(
-                hash => (hash ? hash : utils.asciiToHex(hash))
-              ),
-              specimensAsArrays.reExportHashes.map(
-                hash => (hash ? hash : utils.asciiToHex(hash))
-              ),
-              { from: this.props.accounts[0] }
-            )
+          ? this.createDigitalPermit(permit, specimensAsArrays)
+          : this.createPaperPermit(permit, specimensAsArrays)
     }
+  }
+
+  createDigitalPermit(permit, specimensAsArrays){
+    return this.getImageHash(permit).then(imageHash => {
+      console.log("Real Hash: ", imageHash)
+      console.log("Hex: ", utils.asciiToHex(imageHash.substring(2)))
+      console.log("Converted back: ", utils.hexToUtf8(utils.asciiToHex(imageHash.substring(2))))
+      return this.contracts.PermitFactory.methods.createPermit.cacheSend(
+        utils.asciiToHex(permit.exportCountry),
+        utils.asciiToHex(permit.importCountry),
+        permitUtils.PERMIT_TYPES.indexOf(permit.permitType),
+        permit.exporter.map(address => utils.asciiToHex(address)),
+        permit.importer.map(address => utils.asciiToHex(address)),
+        specimensAsArrays.quantities,
+        specimensAsArrays.scientificNames.map(e => utils.asciiToHex(e)),
+        specimensAsArrays.commonNames.map(e => utils.asciiToHex(e)),
+        specimensAsArrays.descriptions.map(e => utils.asciiToHex(e)),
+        specimensAsArrays.originHashes.map(
+          hash => (hash ? hash : utils.asciiToHex(hash))
+        ),
+        specimensAsArrays.reExportHashes.map(
+          hash => (hash ? hash : utils.asciiToHex(hash))
+        ),
+        utils.fromAscii(imageHash.substring(2)),
+        { from: this.props.accounts[0] }
+      )
+    })
+  }
+
+  async getImageHash(permit){
+    return new Promise((res, rej) => {
+      if(permit["imageFile"]){
+        res(ipfs.add(permit["imageFile"]))
+      }
+      res(utils.asciiToHex("00000000000000000000000000000000"))
+    })
+  }
+
+  createPaperPermit(){
+    return this.contracts.PermitFactory.methods.createPaperPermit.cacheSend(
+      utils.asciiToHex(permit.exportCountry),
+      utils.asciiToHex(permit.importCountry),
+      permitUtils.PERMIT_TYPES.indexOf(permit.permitType),
+      permit.exporter.map(address => utils.asciiToHex(address)),
+      permit.importer.map(address => utils.asciiToHex(address)),
+      specimensAsArrays.quantities,
+      specimensAsArrays.scientificNames.map(e => utils.asciiToHex(e)),
+      specimensAsArrays.commonNames.map(e => utils.asciiToHex(e)),
+      specimensAsArrays.descriptions.map(e => utils.asciiToHex(e)),
+      specimensAsArrays.originHashes.map(
+        hash => (hash ? hash : utils.asciiToHex(hash))
+      ),
+      specimensAsArrays.reExportHashes.map(
+        hash => (hash ? hash : utils.asciiToHex(hash))
+      ),
+      { from: this.props.accounts[0] }
+    )
   }
 
   changeTxState(newTxState) {
@@ -376,24 +400,18 @@ class PermitCreate extends Component {
     this.setState({ isCITESXML: true, isSameCountry: true })
   }
 
-  handleImageUploadChange(event) {
-    var file = event.target.files[0]
-    var reader = new FileReader()
-    // reader.onload = function(event) {
-    //   // The file's text will be printed here
-    //   console.log(event.target.result)
-    // }
-
-    // let filePath = reader.readAsDataURL(file)
-    console.log(file)
-    // this.setState({imgFile: file})
-    this.handleImageUpload(file)
+  handleImageUpload(event) {
+    const { permit } = this.state
+    permit['imageFile'] = event.target.files[0]
+    this.setState({ permit })
+    console.log(permit)
+    // this.handleImageUpload(file)
   }
 
-  handleImageUpload(file) {
-    console.log(this.state.file)
-    ipfs.add(file)
-  }
+  // handleImageUpload(file) {
+  //   console.log(this.state.file)
+  //   ipfs.add(file)
+  // }
 
   handleUploadChange(event) {
     let { isXML } = this.state
@@ -583,24 +601,18 @@ class PermitCreate extends Component {
             permitType={permit.permitType}
           />
         ))}
-        {/* newww */}
         <Box
-          justify={'center'}
+          justify={'between'}
           size={'full'}
           direction={'row'}
           margin={'medium'}>
+          <Heading tag={'h3'}>Foto Hinzufügen</Heading>
           <input
             type="file"
             accept="img/pdf"
-            onChange={event => this.handleImageUploadChange(event)}
-          />
-          <Button
-            label={local.permits.addImage}
-            icon={<DocumentUploadIcon />}
-            onClick={() => this.handleImageUpload()}
+            onChange={event => this.handleImageUpload(event)}
           />
         </Box>
-        {/* neww end */}
         <Box
           justify={'center'}
           size={'full'}
