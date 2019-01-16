@@ -20,7 +20,7 @@ npm install
 ## Start DApp
 1. Run the development blockchain. Passing in a blocktime is recommended to test things like loading indicators, etc.
 ```
-ganache-cli -b 3
+ganache-cli -b 3 -s haha
 ```
 2. Compile and migrate contracts to development blockchain
 ```

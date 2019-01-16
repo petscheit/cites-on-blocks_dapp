@@ -34,7 +34,7 @@ contract PermitFactory is Whitelist {
     bytes32[3] importer; // name and address of importer: ["name", "street", "city"]
     bytes32[] specimenHashes; // hashes of specimens
     uint nonce; // used to create unique hash
-    bytes32 ipfsImageHash; // hash used to find image of permit on IPFS. Client must prepend "Qm" to find file
+    bytes ipfsImageHash; // hash used to find image of permit on IPFS. Client must prepend "Qm" to find file
   }
 
   /**
@@ -124,7 +124,7 @@ contract PermitFactory is Whitelist {
     bytes32[] _descriptions,
     bytes32[] _originHashes,
     bytes32[] _reExportHashes,
-    bytes32 _ipfsImageHash
+    bytes _ipfsImageHash
   )
     public
     onlyWhitelisted
@@ -325,8 +325,9 @@ contract PermitFactory is Whitelist {
   function getPermit(bytes32 _permitHash)
     public
     view
-    returns (bytes2, bytes2, uint8, bytes32[3], bytes32[3], bytes32[], uint)
+    returns (bytes2, bytes2, uint8, bytes32[3], bytes32[3], bytes32[], bytes)
   {
+    // replaced returning the nonce for ipfs hash because of stack to deep error, must investigate
     // Check if a permit for this hash exist.
     // Cause the initial nonce is zero, all permits must have a nonce with a higher value.
     require(permits[_permitHash].nonce > 0);
@@ -339,7 +340,7 @@ contract PermitFactory is Whitelist {
       permits[_permitHash].exporter,
       permits[_permitHash].importer,
       permits[_permitHash].specimenHashes,
-      permits[_permitHash].nonce
+      permits[_permitHash].ipfsImageHash
     );
   }
 
@@ -401,7 +402,7 @@ contract PermitFactory is Whitelist {
     bytes32[] _descriptions,
     bytes32[] _originHashes,
     bytes32[] _reExportHashes,
-    bytes32 _ipfsImageHash
+    bytes _ipfsImageHash
   )
     private
   {
