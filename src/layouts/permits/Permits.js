@@ -15,7 +15,7 @@ import Web3, { utils } from 'web3'
 import PermitDetailsModal from '../../components/PermitDetailsModal'
 import PendingTxModal from '../../components/PendingTxModal'
 import PermitsToolbar from '../../components/PermitsToolbar'
-
+import * as ipfs from '../../util/ipfs'
 import { trimHash, toUnixTimestamp } from '../../util/stringUtils'
 import {
   parseRawPermit,
@@ -128,11 +128,24 @@ class Permits extends Component {
       selectedPermit: {
         ...parsedPermit,
         specimens: parsedSpecimens,
+        imgUrl: await this.getImageLink(parsedPermit.nonce),
         status: event.status,
         timestamp: event.timestamp,
         permitHash: event.permitHash
       }
     })
+  }
+
+  async getImageLink(nonce, hasImg){
+    const res = await this.contracts.PermitFactory.methods.ipfsMultiHashes(parseInt(nonce)).call()
+      .then(res => {
+        // cant return the hasImg tag when getting the permit, so if it doesnt exist in the ipfsMultiHashes mapping the following will be returned
+        if (ipfs.decodeMultiHash(res['1'], res['0']) == 1111111111111111111111111111111111){
+          return false;
+        }
+        return "http://127.0.0.1:8080/ipfs/" + ipfs.decodeMultiHash(res['1'], res['0']);
+      })
+    return res
   }
 
   async setAuthCountry() {
