@@ -611,7 +611,7 @@ class PermitCreate extends Component {
           size={'full'}
           direction={'row'}
           margin={'medium'}>
-          <Heading tag={'h3'}>Foto Hinzufügen</Heading>
+          <Heading tag={'h3'}>{local.permits.addImage}</Heading>
           <input
             type="file"
             accept="img/pdf"
