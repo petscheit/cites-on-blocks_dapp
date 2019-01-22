@@ -40,6 +40,23 @@ class PermitDetailsModal extends Component {
     }
   }
 
+  showImageIfAvailable(url){
+    if(url){
+      return (<Box margin={{ vertical: 'small' }}>
+        <b>{local.permits.imageUrl}</b>
+        <td>
+          <div
+            style={{
+              overflow: 'hidden',
+              'text-overflow': 'ellipsis',
+              }}>
+            <a href={url} target="_blank">{url}</a>
+          </div>
+        </td>
+      </Box>)
+    }
+  }
+
   printPermit(permit) {
     const fieldPlaceholder = '*******'
     const defaultHash =
@@ -174,6 +191,7 @@ class PermitDetailsModal extends Component {
               </div>
             </td>
           </Box>
+          { this.showImageIfAvailable(permit.imgUrl) }
           <Columns justify={'between'} size={'small'}>
             <Box margin={{ vertical: 'small' }}>
               <b>{local.permits.countryOfExport}</b>
