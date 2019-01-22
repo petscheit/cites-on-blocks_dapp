@@ -19,15 +19,14 @@ export function add(file) {
 
 function buildMultihash(hash){
     const bytes = bs58.decode(hash)
-    let versionHash = bytes.toString('hex').substring(0, 4)
-    let contentHash = bytes.toString('hex').slice(4)
+    let versionHash = "0x" + bytes.toString('hex').substring(0, 4)
+    let contentHash = "0x" + bytes.toString('hex').slice(4)
     decodeMultiHash(versionHash, contentHash)
     return [versionHash, contentHash]
 }
 
-function decodeMultiHash(versionHash, contentHash){
-    concatedBytes = Buffer.from(versionHash + contentHash, 'hex')
+export function decodeMultiHash(versionHash, contentHash){
+    let concatedBytes = Buffer.from(versionHash.slice(2) + contentHash.slice(2), 'hex')
     let hash = bs58.encode(concatedBytes)
-    console.log(hash)
     return hash
 }
