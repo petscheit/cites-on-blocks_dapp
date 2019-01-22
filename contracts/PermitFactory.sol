@@ -34,7 +34,18 @@ contract PermitFactory is Whitelist {
     bytes32[3] importer; // name and address of importer: ["name", "street", "city"]
     bytes32[] specimenHashes; // hashes of specimens
     uint nonce; // used to create unique hash
-    bytes ipfsImageHash; // hash used to find image of permit on IPFS. Client must prepend "Qm" to find file
+  }
+
+  /**
+   * A Multihash object stores the information necessary to retrieve an image from IPFS. 
+   * Since the IPFS address is a multihash, the following format is used to store the data efficiently
+   * the hash_function stores the identifier for hash_function and hash length. Currently only Qm is
+   * prepeneded, since IPFS only uses the sha2 algorithm (0x12), which returns a 256 bit long hash (0x20).
+   * the actual hash is there for 32 bytes long.
+   */
+  struct Multihash {
+    bytes32 contentHash;
+    bytes2 hashFunction;
   }
 
   /**
@@ -56,7 +67,6 @@ contract PermitFactory is Whitelist {
     bytes32 reExportHash; // permit hash of last re-export
   }
 
-
   /*
    * Events
    */
@@ -69,7 +79,8 @@ contract PermitFactory is Whitelist {
   event PermitCreated (
     bytes32 indexed permitHash,
     bytes2 indexed exportCountry,
-    bytes2 indexed importCountry
+    bytes2 indexed importCountry,
+    address sender
   );
 
   /**
@@ -83,7 +94,6 @@ contract PermitFactory is Whitelist {
     bool isAccepted
   );
 
-
   /*
    * Global Variables
    */
@@ -93,10 +103,69 @@ contract PermitFactory is Whitelist {
   mapping (bytes32 => Specimen) public specimens; // Used to store specimens to their identifying hash values.
   mapping (bytes32 => bool) public confirmed; // Maps the hash values of permits to the flag if they have been confirmed.
   mapping (bytes32 => bool) public accepted; // Maps the hash values of permits to the flag if they have been accepted.
+  mapping (uint => Multihash) public ipfsMultiHashes; //used to store ipfs multihash based on permits nonce
 
 
   /**
-   * Create a new permit object and register it.
+   * Create a new permit object and register it with image included.
+   *
+   * @dev Called by CITES authority in exporting country.
+   * @dev Digital permit flow.
+   * @param _exportCountry ISO country code of exporting country
+   * @param _importCountry ISO country code of importing country
+   * @param _permitType type of permit: 1 -> Export, 2 -> Re-Export, 3 -> Other
+   * @param _exporter name and address of exporter: ["name", "street", "city"]
+   * @param _importer name and address of importer: ["name", "street", "city"]
+   * @param _quantities quantities of specimens
+   * @param _scientificNames sc. names of specimens
+   * @param _commonNames common names of specimens
+   * @param _descriptions specimen descriptions
+   * @param _originHashes hashes of origin permits of specimens
+   * @param _reExportHashes hashes of last re-export permits of specimens
+   * 
+   */
+  //  @param _ipfsHashFunction first to letter of IPFS address in hex, eg. '0x1220'
+  //  * @param _ipfsContentHash Ipfs address of file in hex
+  function createPermit(
+    bytes2 _exportCountry,
+    bytes2 _importCountry,
+    uint8 _permitType,
+    bytes32[3] _exporter,
+    bytes32[3] _importer,
+    uint[] _quantities,
+    bytes32[] _scientificNames,
+    bytes32[] _commonNames,
+    bytes32[] _descriptions,
+    bytes32[] _originHashes,
+    bytes32[] _reExportHashes,
+    bytes2 _ipfsHashFunction,
+    bytes32 _ipfsContentHash
+  )
+    public
+    onlyWhitelisted
+    whitelistedForCountry(_exportCountry, msg.sender)
+  {
+    _createPermit(
+      _exportCountry,
+      _importCountry,
+      _permitType,
+      _exporter,
+      _importer,
+      _quantities,
+      _scientificNames,
+      _commonNames,
+      _descriptions,
+      _originHashes,
+      _reExportHashes
+    );
+
+    addMultiHash(_ipfsHashFunction, _ipfsContentHash, permitNonce);
+     // Increase the permit nonce to get continuously unique hash values. 
+    permitNonce = permitNonce.add(1);
+  }
+
+    /**
+   * Create a new permit object and register it without an image.
    *
    * @dev Called by CITES authority in exporting country.
    * @dev Digital permit flow.
@@ -123,8 +192,7 @@ contract PermitFactory is Whitelist {
     bytes32[] _commonNames,
     bytes32[] _descriptions,
     bytes32[] _originHashes,
-    bytes32[] _reExportHashes,
-    bytes _ipfsImageHash
+    bytes32[] _reExportHashes
   )
     public
     onlyWhitelisted
@@ -141,9 +209,9 @@ contract PermitFactory is Whitelist {
       _commonNames,
       _descriptions,
       _originHashes,
-      _reExportHashes,
-      _ipfsImageHash
+      _reExportHashes
     );
+     permitNonce = permitNonce.add(1);
   }
 
   /**
@@ -233,6 +301,28 @@ contract PermitFactory is Whitelist {
       permits[_permitHash].importCountry,
       _isAccepted
     );
+  }
+
+
+  /**
+   * Write ipfs Multihash to dedicated mapping.
+   *
+   * @param _hashFunction first to chars of Ipfs hash, Qm in Base58 and 0x1220 in hex
+   * @param _contentHash ipfs hash of content
+   * @param _nonce hash of permit that image belongs too
+   */
+  function addMultiHash(
+    bytes2 _hashFunction, 
+    bytes32 _contentHash,
+    uint _nonce
+  )
+    private
+  {
+    Multihash memory multihash = Multihash({
+      contentHash: _contentHash,
+      hashFunction: _hashFunction
+    });
+    ipfsMultiHashes[_nonce] = multihash;
   }
 
   /**
@@ -325,9 +415,8 @@ contract PermitFactory is Whitelist {
   function getPermit(bytes32 _permitHash)
     public
     view
-    returns (bytes2, bytes2, uint8, bytes32[3], bytes32[3], bytes32[], bytes)
+    returns (bytes2, bytes2, uint8, bytes32[3], bytes32[3], bytes32[], uint)
   {
-    // replaced returning the nonce for ipfs hash because of stack to deep error, must investigate
     // Check if a permit for this hash exist.
     // Cause the initial nonce is zero, all permits must have a nonce with a higher value.
     require(permits[_permitHash].nonce > 0);
@@ -340,7 +429,7 @@ contract PermitFactory is Whitelist {
       permits[_permitHash].exporter,
       permits[_permitHash].importer,
       permits[_permitHash].specimenHashes,
-      permits[_permitHash].ipfsImageHash
+      permits[_permitHash].nonce
     );
   }
 
@@ -401,8 +490,7 @@ contract PermitFactory is Whitelist {
     bytes32[] _commonNames,
     bytes32[] _descriptions,
     bytes32[] _originHashes,
-    bytes32[] _reExportHashes,
-    bytes _ipfsImageHash
+    bytes32[] _reExportHashes
   )
     private
   {
@@ -414,8 +502,7 @@ contract PermitFactory is Whitelist {
       exporter: _exporter,
       importer: _importer,
       specimenHashes: new bytes32[](_quantities.length),
-      nonce: permitNonce,
-      ipfsImageHash: _ipfsImageHash
+      nonce: permitNonce
     });
 
     // Generate the unique hash to store the permit.
@@ -445,11 +532,9 @@ contract PermitFactory is Whitelist {
     emit PermitCreated(
       permitHash,
       permit.exportCountry,
-      permit.importCountry
+      permit.importCountry,
+      msg.sender
     );
-
-    // Increase the permit nonce to get continuously unique hash values.
-    permitNonce = permitNonce.add(1);
   }
 
   /**
