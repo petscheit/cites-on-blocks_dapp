@@ -175,25 +175,20 @@ class PermitCreate extends Component {
     return false
   }
 
-  createPaperPermit(){
-    return this.contracts.PermitFactory.methods.createPaperPermit.cacheSend(
-      utils.asciiToHex(permit.exportCountry),
-      utils.asciiToHex(permit.importCountry),
-      permitUtils.PERMIT_TYPES.indexOf(permit.permitType),
-      permit.exporter.map(address => utils.asciiToHex(address)),
-      permit.importer.map(address => utils.asciiToHex(address)),
-      specimensAsArrays.quantities,
-      specimensAsArrays.scientificNames.map(e => utils.asciiToHex(e)),
-      specimensAsArrays.commonNames.map(e => utils.asciiToHex(e)),
-      specimensAsArrays.descriptions.map(e => utils.asciiToHex(e)),
-      specimensAsArrays.originHashes.map(
-        hash => (hash ? hash : utils.asciiToHex(hash))
-      ),
-      specimensAsArrays.reExportHashes.map(
-        hash => (hash ? hash : utils.asciiToHex(hash))
-      ),
-      { from: this.props.accounts[0] }
-    )
+  createPaperPermit(permit, specimensAsArrays){
+    var args = this.buildPermitVariables(permit, specimensAsArrays)
+    if (this.hasImage(permit)) {
+      this.uploadImage(permit['imageFile'])
+        .then(ipfsMultiHash => {
+          this.contracts.PermitFactory.methods.createPaperPermit.cacheSend(
+            args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], ipfsMultiHash[0], ipfsMultiHash[1], { from: this.props.accounts[0] }
+          )
+        })
+    } else {
+      this.contracts.PermitFactory.methods.createPaperPermit.cacheSend(
+        args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], { from: this.props.accounts[0] }
+      )
+    }
   }
 
   changeTxState(newTxState) {

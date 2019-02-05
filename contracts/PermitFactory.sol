@@ -231,37 +231,92 @@ contract PermitFactory is Whitelist {
    * @param _originHashes hashes of origin permits of specimens
    * @param _reExportHashes hashes of last re-export permits of specimens
    */
-  // function createPaperPermit(
-  //   bytes2 _exportCountry,
-  //   bytes2 _importCountry,
-  //   uint8 _permitType,
-  //   bytes32[3] _exporter,
-  //   bytes32[3] _importer,
-  //   uint[] _quantities,
-  //   bytes32[] _scientificNames,
-  //   bytes32[] _commonNames,
-  //   bytes32[] _descriptions,
-  //   bytes32[] _originHashes,
-  //   bytes32[] _reExportHashes
-  // )
-  //   public
-  //   onlyWhitelisted
-  //   whitelistedForCountry(_importCountry, msg.sender)
-  // {
-  //   _createPermit(
-  //     _exportCountry,
-  //     _importCountry,
-  //     _permitType,
-  //     _exporter,
-  //     _importer,
-  //     _quantities,
-  //     _scientificNames,
-  //     _commonNames,
-  //     _descriptions,
-  //     _originHashes,
-  //     _reExportHashes
-  //   );
-  // }
+  function createPaperPermit(
+    bytes2 _exportCountry,
+    bytes2 _importCountry,
+    uint8 _permitType,
+    bytes32[3] _exporter,
+    bytes32[3] _importer,
+    uint[] _quantities,
+    bytes32[] _scientificNames,
+    bytes32[] _commonNames,
+    bytes32[] _descriptions,
+    bytes32[] _originHashes,
+    bytes32[] _reExportHashes,
+    bytes2 _ipfsHashFunction,
+    bytes32 _ipfsContentHash
+  )
+    public
+    onlyWhitelisted
+    whitelistedForCountry(_importCountry, msg.sender)
+  {
+    _createPermit(
+      _exportCountry,
+      _importCountry,
+      _permitType,
+      _exporter,
+      _importer,
+      _quantities,
+      _scientificNames,
+      _commonNames,
+      _descriptions,
+      _originHashes,
+      _reExportHashes
+    );
+    addMultiHash(_ipfsHashFunction, _ipfsContentHash, permitNonce);
+    permitNonce = permitNonce.add(1);
+  }
+
+
+  /**
+   * Create a new paper permit object and register it.
+   *
+   * @dev Called by CITES authority in importing country.
+   * @dev Paper-based permit flow.
+   * @param _exportCountry ISO country code of exporting country
+   * @param _importCountry ISO country code of importing country
+   * @param _permitType type of permit: 1 -> Export, 2 -> Re-Export, 3 -> Other
+   * @param _exporter name and address of exporter: ["name", "street", "city"]
+   * @param _importer name and address of importer: ["name", "street", "city"]
+   * @param _quantities quantities of specimens
+   * @param _scientificNames sc. names of specimens
+   * @param _commonNames common names of specimens
+   * @param _descriptions specimen descriptions
+   * @param _originHashes hashes of origin permits of specimens
+   * @param _reExportHashes hashes of last re-export permits of specimens
+   */
+  function createPaperPermit(
+    bytes2 _exportCountry,
+    bytes2 _importCountry,
+    uint8 _permitType,
+    bytes32[3] _exporter,
+    bytes32[3] _importer,
+    uint[] _quantities,
+    bytes32[] _scientificNames,
+    bytes32[] _commonNames,
+    bytes32[] _descriptions,
+    bytes32[] _originHashes,
+    bytes32[] _reExportHashes
+  )
+    public
+    onlyWhitelisted
+    whitelistedForCountry(_importCountry, msg.sender)
+  {
+    _createPermit(
+      _exportCountry,
+      _importCountry,
+      _permitType,
+      _exporter,
+      _importer,
+      _quantities,
+      _scientificNames,
+      _commonNames,
+      _descriptions,
+      _originHashes,
+      _reExportHashes
+    );
+    permitNonce = permitNonce.add(1);
+  }
 
   /**
    * Mark a permit as confirmed and set the accepted flag.

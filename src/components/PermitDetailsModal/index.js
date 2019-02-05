@@ -50,7 +50,7 @@ class PermitDetailsModal extends Component {
               overflow: 'hidden',
               'text-overflow': 'ellipsis',
               }}>
-            <a href={url} target="_blank">{url}</a>
+            <img src={url} />
           </div>
         </td>
       </Box>)
