@@ -3,22 +3,16 @@ services:
   ganache:
     container_name: ganache
     image: trufflesuite/ganache-cli:latest
+    command: "-s haha"
     ports:
       - "8545:8545"
-    networks:
-      - net
-    command: ["-b 3 -s secretSeed"]
-
   web:
     container_name: web
     build: .
     ports:
       - "3000:3000"
-    networks:
-      - net
     depends_on:
       - ganache
-
-networks:
-  net:
-    external: true
+    links:
+      - ganache:ganache
+   
