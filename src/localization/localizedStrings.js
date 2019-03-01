@@ -151,7 +151,7 @@ let local = new LocalizedStrings({
       decline: 'Decline',
       confirm: 'Confirm',
       addImage: 'Add Image',
-      imageUrl: 'Image Url'
+      imageUrl: 'Image'
     },
     permitCreate: {
       pending: 'Permit creation pending...',
@@ -372,7 +372,7 @@ let local = new LocalizedStrings({
       decline: 'Ablehnen',
       confirm: 'Bestätigen',
       addImage: 'Foto hinzufügen',
-      imageUrl: 'Foto Url'
+      imageUrl: 'Foto'
     },
     permitCreate: {
       pending: 'Genehmigung wird erstellt...',

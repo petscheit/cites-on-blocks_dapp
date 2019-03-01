@@ -130,6 +130,9 @@ class PermitCreate extends Component {
             args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], ipfsMultiHash[0], ipfsMultiHash[1], { from: this.props.accounts[0] }
           )
         })
+        .then(()=> {
+          this.removeImageFromState()
+        })
     } else {
       this.contracts.PermitFactory.methods.createPermit.cacheSend(
         args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], { from: this.props.accounts[0] }
@@ -162,6 +165,12 @@ class PermitCreate extends Component {
     this.setState({ permit })
   }
 
+  removeImageFromState(){
+    const { permit } = this.state
+    permit['imageFile'] = null
+    this.setState({ permit })
+  }
+
   uploadImage(file){
     return new Promise((res, rej) => {
       res(ipfs.add(file))
@@ -183,6 +192,9 @@ class PermitCreate extends Component {
           this.contracts.PermitFactory.methods.createPaperPermit.cacheSend(
             args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], ipfsMultiHash[0], ipfsMultiHash[1], { from: this.props.accounts[0] }
           )
+        })
+        .then(() => {
+          this.removeImageFromState()
         })
     } else {
       this.contracts.PermitFactory.methods.createPaperPermit.cacheSend(
