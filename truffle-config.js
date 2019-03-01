@@ -2,6 +2,11 @@ module.exports = {
   migrations_directory: './migrations',
   networks: {
     development: {
+      host: 'localhost',
+      port: 8545,
+      network_id: '*' // Match any network id
+    },
+    demo: {
       host: 'ganache',
       port: 8545,
       network_id: '*' // Match any network id
@@ -17,7 +22,7 @@ module.exports = {
   },
   compiler: {
     solc: {
-      version: "0.4.23",
+      version: "0.4.24",
       optimizer: {
         enabled: true,
         runs: 500

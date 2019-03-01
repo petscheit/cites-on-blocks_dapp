@@ -13,3 +13,7 @@ Find it at [http://127.0.0.1:5001](http://127.0.0.1:5001).
 
 ### Killing Docker containers
 run `docker-compose kill ipfsA ipfsB && yes | docker-compose rm ipfsA ipfsB` to kill and remove all containers since they run in deamon mode
+
+
+### IPFS Cluster 
+Files are pinned to other nodes based on free space on each node. Nodes are sorted based on free disk space, most free space too least free space and receive pins in that order.

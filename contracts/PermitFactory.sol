@@ -11,6 +11,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
  */
 contract PermitFactory is Whitelist {
 
+
   // Initialize the safe math data types.
   using SafeMath for uint256;
 
@@ -127,6 +128,44 @@ contract PermitFactory is Whitelist {
   //  @param _ipfsHashFunction first to letter of IPFS address in hex, eg. '0x1220'
   //  * @param _ipfsContentHash Ipfs address of file in hex
   function createPermit(
+    bytes2 _exportCountry,
+    bytes2 _importCountry,
+    uint8 _permitType,
+    bytes32[3] _exporter,
+    bytes32[3] _importer,
+    uint[] _quantities,
+    bytes32[] _scientificNames,
+    bytes32[] _commonNames,
+    bytes32[] _descriptions,
+    bytes32[] _originHashes,
+    bytes32[] _reExportHashes,
+    bytes2 _ipfsHashFunction,
+    bytes32 _ipfsContentHash
+  )
+    public
+    onlyWhitelisted
+    whitelistedForCountry(_exportCountry, msg.sender)
+  {
+    _createPermit(
+      _exportCountry,
+      _importCountry,
+      _permitType,
+      _exporter,
+      _importer,
+      _quantities,
+      _scientificNames,
+      _commonNames,
+      _descriptions,
+      _originHashes,
+      _reExportHashes
+    );
+
+    addMultiHash(_ipfsHashFunction, _ipfsContentHash, permitNonce);
+     // Increase the permit nonce to get continuously unique hash values. 
+    permitNonce = permitNonce.add(1);
+  }
+
+    function createPermitDemo(
     bytes2 _exportCountry,
     bytes2 _importCountry,
     uint8 _permitType,

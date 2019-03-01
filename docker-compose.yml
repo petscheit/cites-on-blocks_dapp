@@ -13,6 +13,196 @@ services:
       - "3000:3000"
     depends_on:
       - ganache
+      - ipfs0
     links:
       - ganache:ganache
-   
+      - ipfs0:ipfs0
+  ipfs0:
+    container_name: ipfs0
+    image: ipfs/go-ipfs:release
+    ports:
+      - "4001:4001" # ipfs swarm
+      - "4002:4002/udp" # udp swarm
+      - "5001:5001" # expose if needed/wanted
+      - "8080:8080" # exposes if needed/wanted
+    volumes:
+      - ./compose/ipfs0:/data/ipfs
+      
+  cluster0:
+    container_name: cluster0
+    image: ipfs/ipfs-cluster:latest
+    depends_on:
+      - ipfs0
+    environment:
+      CLUSTER_SECRET: 37c567890e6fe6498009f3e76dc43887b5e2d9d0742931c229912be844ee19cd 
+      IPFS_API: /dns4/ipfs0/tcp/5001
+      CLUSTER_REPLICATIONFACTORMIN: 2
+      CLUSTER_REPLICATIONFACTORMAX: 2
+      CLUSTER_PEERNAME: cluster0
+      CLUSTER_LEAVEONSHUTDOWN: 'TRUE'
+      CLUSTER_RESTAPI_CORSALLOWEDMETHODS: GET,POST,PUT
+      CLUSTER_RESTAPI_CORSALLOWEDORIGINS: "*"
+    ports:
+      - "9094:9094" # API
+      - "9095:9095" # Cluster IPFS Proxy endpoint
+    volumes:
+      - ./compose/cluster0:/data/ipfs-cluster
+
+##################################################################################
+      
+  ipfs1:
+    container_name: ipfs1
+    image: ipfs/go-ipfs:release
+    ports:
+      - "4101:4001" # ipfs swarm
+      - "4102:4002/udp" # udp swarm
+#         - "5101:5001" # expose if needed/wanted
+#         - "8180:8080" # exposes if needed/wanted
+    volumes:
+      - ./compose/ipfs1:/data/ipfs
+
+  # cluster1 bootstraps to cluster0 if not bootstrapped before
+  cluster1:
+    container_name: cluster1
+    image: ipfs/ipfs-cluster:latest
+    depends_on:
+      - cluster0
+      - ipfs1
+    environment:
+      CLUSTER_SECRET: 37c567890e6fe6498009f3e76dc43887b5e2d9d0742931c229912be844ee19cd
+      IPFS_API: /dns4/ipfs1/tcp/5001
+      CLUSTER_REPLICATIONFACTORMIN: 2
+      CLUSTER_REPLICATIONFACTORMAX: 2
+      CLUSTER_PEERNAME: cluster1
+      CLUSTER_LEAVEONSHUTDOWN: 'TRUE'
+    ports:
+      - "9194:9094" # API
+#         - "9196:9096" # Cluster IPFS Proxy endpoint
+    volumes:
+      - ./compose/cluster1:/data/ipfs-cluster
+    entrypoint:
+      - "/sbin/tini"
+      - "--"
+    # Translation: if state folder does not exist, find cluster0 id and bootstrap
+    # to it.
+    command: >-
+      sh -c '
+        cmd="daemon --upgrade"
+        if [ ! -d /data/ipfs-cluster/raft ]; then
+          while ! ipfs-cluster-ctl --host /dns4/cluster0/tcp/9094 id; do
+            sleep 1
+          done
+          pid=`ipfs-cluster-ctl --host /dns4/cluster0/tcp/9094 id | grep -o -E "^(\w+)"`
+          sleep 10 
+          cmd="daemon --bootstrap /dns4/cluster0/tcp/9096/ipfs/$$pid"
+        fi 
+        /usr/local/bin/entrypoint.sh $$cmd 
+      ' 
+##################################################################################
+ 
+  ipfs2:
+    container_name: ipfs2
+    image: ipfs/go-ipfs:release
+    ports:
+      - "4201:4001" # ipfs swarm
+      - "4202:4002/udp" # udp swarm
+#         - "5101:5001" # expose if needed/wanted
+#         - "8180:8080" # exposes if needed/wanted
+    volumes:
+      - ./compose/ipfs2:/data/ipfs
+    
+    
+
+  # cluster2 bootstraps to cluster0 if not bootstrapped before
+  cluster2:
+    container_name: cluster2
+    image: ipfs/ipfs-cluster:latest
+    depends_on:
+      - cluster0
+      - ipfs2
+    environment:
+      # Change this! Same for all peers!
+      CLUSTER_SECRET: 37c567890e6fe6498009f3e76dc43887b5e2d9d0742931c229912be844ee19cd
+      IPFS_API: /dns4/ipfs2/tcp/5001
+      CLUSTER_REPLICATIONFACTORMIN: 2
+      CLUSTER_REPLICATIONFACTORMAX: 2
+      CLUSTER_PEERNAME: cluster2
+      CLUSTER_LEAVEONSHUTDOWN: 'TRUE'
+    ports:
+          - "9294:9094" # API
+#         - "9196:9096" # Cluster IPFS Proxy endpoint
+    volumes:
+      - ./compose/cluster2:/data/ipfs-cluster
+    entrypoint:
+      - "/sbin/tini"
+      - "--"
+    # Translation: if state folder does not exist, find cluster0 id and bootstrap
+    # to it.
+    command: >-
+      sh -c '
+        cmd="daemon --upgrade"
+        if [ ! -d /data/ipfs-cluster/raft ]; then
+          while ! ipfs-cluster-ctl --host /dns4/cluster0/tcp/9094 id; do
+            sleep 1
+          done
+          pid=`ipfs-cluster-ctl --host /dns4/cluster0/tcp/9094 id | grep -o -E "^(\w+)"`
+          sleep 10
+          cmd="daemon --bootstrap /dns4/cluster0/tcp/9096/ipfs/$$pid"
+        fi
+        /usr/local/bin/entrypoint.sh $$cmd
+      '
+
+##################################################################################
+
+  ipfs3:
+    container_name: ipfs3
+    image: ipfs/go-ipfs:release
+    ports:
+      - "4301:4001" # ipfs swarm
+      - "4302:4002/udp" # udp swarm
+#         - "5101:5001" # expose if needed/wanted
+#         - "8180:8080" # exposes if needed/wanted
+    volumes:
+      - ./compose/ipfs3:/data/ipfs
+
+  # cluster2 bootstraps to cluster0 if not bootstrapped before
+  cluster3:
+    container_name: cluster3
+    image: ipfs/ipfs-cluster:latest
+    depends_on:
+      - cluster0
+      - ipfs3
+    environment:
+      # Change this! Same for all peers!
+      CLUSTER_SECRET: 37c567890e6fe6498009f3e76dc43887b5e2d9d0742931c229912be844ee19cd
+      IPFS_API: /dns4/ipfs3/tcp/5001
+      CLUSTER_REPLICATIONFACTORMIN: 2
+      CLUSTER_PEERNAME: cluster3
+      CLUSTER_REPLICATIONFACTORMAX: 2
+      CLUSTER_LEAVEONSHUTDOWN: 'TRUE'
+    ports:
+      - "9394:9094" # API
+#         - "9196:9096" # Cluster IPFS Proxy endpoint
+    volumes:
+      - ./compose/cluster3:/data/ipfs-cluster
+    entrypoint:
+      - "/sbin/tini"
+      - "--"
+    # Translation: if state folder does not exist, find cluster0 id and bootstrap
+    # to it.
+    command: >-
+      sh -c '
+        cmd="daemon --upgrade"
+        if [ ! -d /data/ipfs-cluster/raft ]; then
+          while ! ipfs-cluster-ctl --host /dns4/cluster0/tcp/9094 id; do
+            sleep 1
+          done
+          pid=`ipfs-cluster-ctl --host /dns4/cluster0/tcp/9094 id | grep -o -E "^(\w+)"`
+          sleep 10
+          cmd="daemon --bootstrap /dns4/cluster0/tcp/9096/ipfs/$$pid"
+        fi
+        /usr/local/bin/entrypoint.sh $$cmd
+      '
+# For adding more peers, copy PEER 1 and rename things to ipfs2, cluster2.
+# Keep bootstrapping to cluster0.
+

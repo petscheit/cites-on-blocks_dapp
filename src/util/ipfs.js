@@ -1,12 +1,10 @@
 const ipfsAPI = require('ipfs-http-client')
-const ipfs = ipfsAPI('0.0.0.0', '5001')
+const ipfs = ipfsAPI('127.0.0.1', '5001')
 const fileReaderPullStream = require('pull-file-reader')
 const bs58 = require('bs58')
 
-
-
 export function add(file) {
-    const fileStream = fileReaderPullStream(file)
+    let fileStream = fileReaderPullStream(file)
     return ipfs
         .add(fileStream)
         .then(response => {
@@ -14,6 +12,7 @@ export function add(file) {
             return buildMultihash(response[0].hash)
         }).catch((err) => {
             console.log(err)
+            throw err
         })
 };
 

@@ -17,7 +17,25 @@ cd cites-on-blocks_dapp
 ```
 npm install
 ```
-## Start DApp
+
+# Demo Mode
+
+1. run ./launch-demo.sh and wait until everything is running (~1 min)
+2. Open localhost:3000 for cites dapp and localhost:5001/webui for ipfs webui
+3. Import Private Keys to metamask:
+
+Controller: 0x04fb4507e72398b4e7461e717d999cbc7d91bb5da10ac0cf38b00446c2be696d
+Germany-DE: 0xd00ee65656695144ec92bb620514deb2274558950d689d36f01fdc0c70ccbbb8
+France-FR: 0x718576aac11bf97ba0fb936b2ef1b45cf9f069fe1a41ae21c7649985aa28dafe
+Philippines-PH: 0xccf3d0764a62246769009edb163b5f56119faf043d958470cc3fcd39a0680dec
+Romania-RO: 0xbe1b7bb71f5e8c8beebe15f2b7f804f1ae747daaf75da0c76920314c0c340cb9
+Rwanda-RW: 0x6319245ae972d4e6ea7f0885f0ada2bb3ec3c88b82b1a09343da82835af529a0
+
+## Know metamask issue
+When ganache is restarted for any reason, metamask has to be disabled, reenabled and unlocked in chrome, otherwise it will throw errors/not work.
+
+
+# Start DApp
 1. Run the development blockchain. Passing in a blocktime is recommended to test things like loading indicators, etc.
 ```
 ganache-cli -b 3 -s haha
